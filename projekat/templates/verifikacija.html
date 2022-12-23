@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %} 
+Verifikacija profila
+{% endblock %}
+
+{% block content %}
+  {% if korisnik_verifikacija.je_verifikovan %}
+  <div class="row" style="margin-top:20px; margin-left:20px">
+    <div class="col-8">
+      <h3>Nalog je već verifikovan.</h3>
+      <a class="btn btn-lg btn-outline-primary" href="{{url_for('prikaz_profila')}}">Profil</a>
+    </div>
+  </div>
+  {% else %}
+    <div class="row" style="margin-top:20px; margin-left:20px">
+      <div class="col-8">
+        <h2>Unesite informacije sa svoje platne kartice</h2>
+        <br />
+        <form action="/verifikacija/{{korisnik_verifikacija.id}}" method="POST" class="form-register">
+          {{forma.hidden_tag()}}
+
+          {{forma.broj_kartice.label()}}
+          {{forma.broj_kartice(class="form-control", placeholder="")}}
+
+          <p>Ime korisnika:</p> 
+          <input class="form-control" value="{{current_user.ime}}" readonly>
+
+          {{forma.datum_isteka_kartice.label()}}
+          {{forma.datum_isteka_kartice(class="form-control", placeholder="")}}
+
+          {{forma.sigurnosni_kod.label()}}
+          {{forma.sigurnosni_kod(class="form-control", placeholder="")}}
+
+          <br />
+          {{forma.submit(class="btn btn-lg btn-block btn-primary")}}
+          <br/>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

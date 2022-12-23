@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %} 
+Pregled profila
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top:20px; margin-left:20px">
+  <div class="col-8">
+    <h2>Informacije o korisniku</h2>
+    <br />
+    <table class="table table-hover table-dark">
+      <thead>
+        <tr>
+          <th scope="col">Ime</th>
+          <th scope="col">Prezime</th>
+          <th scope="col">Adresa</th>
+          <th scope="col">Grad</th>
+          <th scope="col">Država</th>
+          <th scope="col">Broj telefona</th>
+          <th scope="col">Email</th>
+          <th scope="col">Stanje online računa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Your rows inside the table HERE: -->
+        <tr>
+          <td>{{current_user.ime}}</td>
+          <td>{{current_user.prezime}}</td>
+          <td>{{current_user.adresa}}</td>
+          <td>{{current_user.grad}}</td>
+          <td>{{current_user.drzava}}</td>
+          <td>{{current_user.broj_telefona}}</td>
+          <td>{{current_user.email}}</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    <a class="btn btn-sm btn-block btn-outline-primary" href="{{url_for('izmena_podataka', id=current_user.id)}}">Izmena podataka</a>
+    {% if current_user.je_verifikovan %}
+
+    {% else %}
+    <a class="btn btn-sm btn-block btn-outline-primary" href="{{url_for('verifikacija', id=current_user.id)}}">Verifikacija naloga</a>
+    {% endif %}
+  </div>
+
+{% endblock %}

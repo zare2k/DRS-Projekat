@@ -1,9 +1,14 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, DateField
 from wtforms.validators import Length, EqualTo, Email, DataRequired, ValidationError
-from projekat.modeli import Korisnik
+from projekat.modeli import Korisnik, Kartica
 
 class RegisterForm(FlaskForm):
+  
+  def validate_email(self, email_provera):
+    korisnik = Korisnik.query.filter_by(email=email_provera.data).first()
+    if korisnik:
+      raise ValidationError('Korisnik sa unetom email adresom već postoji. Unesite drugu email adresu.')
   
   ime = StringField(label='Ime:', validators=[Length(min=3, max=30), DataRequired()])
   prezime = StringField(label='Prezime:', validators=[Length(min=3, max=30), DataRequired()])
@@ -17,6 +22,22 @@ class RegisterForm(FlaskForm):
   submit = SubmitField(label='Kreiraj nalog')
     
 class LoginForm(FlaskForm):
-  email = StringField(label='Email:', validators=[DataRequired()])
-  lozinka = PasswordField(label='Lozinka:', validators=[DataRequired()])
+  email = StringField(label='Email:', validators=[Email(), DataRequired()])
+  lozinka = PasswordField(label='Lozinka:', validators=[Length(min=5), DataRequired()])
   submit = SubmitField(label='Prijavi se')
+  
+class IzmenaForm(FlaskForm):
+  ime = StringField(label='Ime:', validators=[Length(min=3, max=30), DataRequired()])
+  prezime = StringField(label='Prezime:', validators=[Length(min=3, max=30), DataRequired()])
+  adresa = StringField(label='Adresa:', validators=[Length(min=3, max=30), DataRequired()])
+  grad = StringField(label='Grad:', validators=[Length(min=3, max=30), DataRequired()])
+  drzava = StringField(label='Drzava:', validators=[Length(min=3, max=30), DataRequired()])
+  broj_telefona = StringField(label='Broj telefona:', validators=[Length(min=3, max=30), DataRequired()])
+  email = StringField(label='Email:', validators=[Email(), DataRequired()])
+  submit = SubmitField(label='Sacuvaj izmene')
+  
+class VerifikacijaForm(FlaskForm):
+  broj_kartice = StringField(label='Broj kartice:', validators=[Length(min=16, max=16), DataRequired()])
+  datum_isteka_kartice = StringField(label='Datum isteka kartice: ', validators=[DataRequired()])
+  sigurnosni_kod = StringField(label='Sigurnosni kod: ', validators=[Length(min=3, max=3), DataRequired()])
+  submit = SubmitField(label='Verifikuj nalog')
