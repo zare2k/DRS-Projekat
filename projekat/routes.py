@@ -1,6 +1,6 @@
 from projekat import app, db
-from projekat.forme import RegisterForm, LoginForm, IzmenaForm, VerifikacijaForm
-from projekat.modeli import Korisnik, Kartica
+from projekat.forme import RegisterForm, LoginForm, IzmenaForm, VerifikacijaForm, OnlineUplataForm, KonvertovanjeForm
+from projekat.modeli import Korisnik, Kartica, RealTimeCurrencyConverter, Stanja
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.sql import text, select
@@ -70,10 +70,10 @@ def izmena_podataka(id):
         korisnik_izmena.email = request.form['email']
         if form.validate_on_submit():
             db.session.commit()
-            flash("Podaci uspesno izmenjeni.", category='success')
+            flash("Podaci uspešno izmenjeni.", category='success')
             return redirect(url_for('prikaz_profila'))
         else:
-            flash("Izmena podataka neuspesna", category="danger")
+            flash("Izmena podataka neuspešna.", category="danger")
     return render_template('izmena.html', form=form, korisnik_izmena=korisnik_izmena)
 
 @app.route('/verifikacija/<int:id>', methods=['GET', 'POST'])
@@ -83,18 +83,104 @@ def verifikacija(id):
     korisnik_verifikacija = Korisnik.query.get_or_404(id)
     if request.method == "POST":
         if forma.validate_on_submit():
-            kartica = Kartica(broj_kartice=forma.broj_kartice.data,
-                                datum_isteka_kartice=forma.datum_isteka_kartice.data,
-                                sigurnosni_kod=forma.sigurnosni_kod.data,
-                                budzet=1000,
-                                ime_korisnika=korisnik_verifikacija.id)
-            db.session.add(kartica)
-            db.session.commit()
-            korisnik_verifikacija.verifikovan = True
-            kartica.budzet -= 1
-            db.session.commit()
-            flash("Nalog uspesno verifikovan.", category='success')
-            return redirect(url_for('prikaz_profila'))
+            if(forma.broj_kartice.data.isnumeric() and forma.sigurnosni_kod.data.isnumeric() and korisnik_verifikacija.provera_datuma(forma.datum_isteka_kartice.data)):
+                kartica = Kartica(broj_kartice=forma.broj_kartice.data,
+                                    datum_isteka_kartice=forma.datum_isteka_kartice.data,
+                                    sigurnosni_kod=forma.sigurnosni_kod.data,
+                                    budzet=1000,
+                                    ime_korisnika=korisnik_verifikacija.id)
+                db.session.add(kartica)
+                db.session.commit()
+                url = 'https://api.exchangerate-api.com/v4/latest/RSD'
+                converter = RealTimeCurrencyConverter(url)
+                dolar_u_dinarima = converter.convert('USD', 'RSD', 1)
+                korisnik_verifikacija.verifikovan = True
+                kartica.budzet -= dolar_u_dinarima
+                db.session.commit()
+                flash("Nalog uspešno verifikovan.", category='success')
+                return redirect(url_for('prikaz_profila'))
+            else:
+                flash('Unesite validne parametre za verifikaciju.', category='danger')
         else:
-            flash("Greska prilikom verifikacije.", category='danger')
+            flash("Greška prilikom verifikacije.", category='danger')
     return render_template('verifikacija.html', forma=forma, korisnik_verifikacija = korisnik_verifikacija)
+
+@app.route('/pregled/<int:id>', methods=["GET", "POST"], defaults={'valuta1' : None, 'valuta2' : None, 'iznos' : None })
+@app.route('/pregled/<int:id>/<valuta1>/<valuta2>/<float:iznos>', methods=["GET", "POST"])
+@login_required
+def pregled_stanja(id, valuta1, valuta2, iznos):
+    korisnik = Korisnik.query.get_or_404(id)
+    if valuta1 != None:
+        stanje_za_konverziju = Stanja.query.filter_by(ime_korisnika=korisnik.id, valuta=valuta2).first()
+        if stanje_za_konverziju == None:
+                stanje_za_konverziju = Stanja(valuta=valuta2,
+                                    vrednost=0,
+                                    ime_korisnika=korisnik.id)
+                db.session.add(stanje_za_konverziju)
+                db.session.commit()      
+        staro_stanje = Stanja.query.filter_by(ime_korisnika=korisnik.id, valuta=valuta1).first()
+        url = 'https://api.exchangerate-api.com/v4/latest/' + valuta1
+        converter = RealTimeCurrencyConverter(url)
+        nova_vrednost = converter.convert(valuta1, valuta2, iznos)
+        stanje_za_konverziju.vrednost += nova_vrednost
+        staro_stanje.vrednost -= iznos
+        db.session.commit()
+    stanje = Stanja.query.filter_by(ime_korisnika=korisnik.id).all()
+    return render_template('pregled.html', stanja=stanje, korisnik=korisnik)
+
+@app.route('/konverzija/<int:id>/<valuta>', methods=["GET", "POST"])
+@login_required
+def konverzija(id, valuta):
+    korisnik = Korisnik.query.get_or_404(id)
+    #stanje = Stanja.query.filter_by(ime_korisnika=korisnik.id).first()
+    url = 'https://api.exchangerate-api.com/v4/latest/' + valuta
+    converter = RealTimeCurrencyConverter(url)
+    valute = converter.get_valute()
+    return render_template('konverzija.html', korisnik=korisnik, valute=valute, valuta=valuta)
+
+@app.route('/konvertovanje/<int:id>/<valuta>/<valuta2>', methods=["GET", "POST"])
+@login_required
+def konvertovanje(id, valuta, valuta2):
+    forma = KonvertovanjeForm()
+    korisnik = Korisnik.query.get_or_404(id)
+    stanje = Stanja.query.filter_by(ime_korisnika=korisnik.id, valuta=valuta).first()
+    if request.method == "POST":
+        if forma.validate_on_submit():
+            iznos=forma.iznos.data
+            if iznos < 0:
+                flash(f'Unesite ispravan iznos.', category='danger')
+                return render_template('konvertovanje.html', forma=forma, korisnik=korisnik)
+            if stanje.vrednost >= iznos:
+                return redirect(url_for('pregled_stanja', id=korisnik.id, valuta1=valuta, valuta2=valuta2, iznos=iznos))
+            else:
+                flash(f'Nemate dovoljno sredstava u {stanje.valuta}', category='danger')
+        else:
+            flash(f'Unesite iznos za konverziju', category='danger')
+    return render_template('konvertovanje.html', forma=forma, korisnik=korisnik)
+    
+@app.route('/online_uplata/<int:id>', methods=["GET", "POST"])
+@login_required
+def online_uplata(id):
+    forma = OnlineUplataForm()
+    korisnik = Korisnik.query.get_or_404(id)
+    kartica = Kartica.query.filter_by(ime_korisnika=korisnik.id).first()
+    if request.method == "POST":
+        if forma.validate_on_submit():
+            stanje_dinari = Stanja.query.filter_by(ime_korisnika=korisnik.id, valuta='RSD').first()
+            if stanje_dinari == None:
+                stanje_dinari = Stanja(valuta='RSD',
+                                vrednost=0,
+                                ime_korisnika=korisnik.id)
+                db.session.add(stanje_dinari)
+                db.session.commit()
+            if kartica.uplata_online(forma.iznos.data):
+                stanje_dinari.vrednost += forma.iznos.data
+                db.session.commit()
+                kartica.budzet -= forma.iznos.data
+                db.session.commit()
+                return redirect(url_for('prikaz_profila'))
+            else:
+                flash('Nemoguća transakcija. Nemate dovoljno sredstava na računu.', category='danger')        
+        else:
+            flash('Unesite pravilan iznos.', category='danger')
+    return render_template('online_uplata.html', forma=forma, korisnik=korisnik)

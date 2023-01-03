@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %} 
+Konverzija frfr
+{% endblock %}
+
+{% block content %}
+<body class="text-center">
+  <div class="container">
+    <form method="POST" class="form-signin">
+      {{ forma.hidden_tag() }}
+      <h1 class="h3 mb-3 font-weight-normal">Unesite iznos za konverziju</h1>
+      <br />
+      {{forma.iznos.label()}}
+      {{forma.iznos(class="form-control")}}
+
+      {{ forma.submit(class="btn btn-lf btn-block btn-primary")}}
+    </form>
+  </div>
+</body>
+
+{% endblock  %}

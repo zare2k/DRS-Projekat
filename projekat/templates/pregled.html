@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %} 
+Pregled stanja
+{% endblock %}
+
+{% block content %}
+{%if korisnik.verifikovan == False%}
+<h1>Niste verifikovani da vidite svoj online račun.</h1>
+{% else %}
+<div class="row" style="margin-top:20px; margin-left:20px">
+  <div class="col-6">
+    <h2>Stanje online računa</h2>
+    <br />
+    <table class="table table-hover table-dark">
+      <thead>
+        <tr>
+          <th scope="col">Raspoloživa sredstva</th>
+          <th scope="col">Valuta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Your rows inside the table HERE: -->
+        {% for stanje in stanja %}
+        <tr>
+          <td>{{stanje.vrednost}}</td>
+          <td>{{stanje.valuta}}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="{{url_for('konverzija', id=current_user.id, valuta=stanje.valuta)}}">Konverzija u drugu valutu</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a class="btn btn-sm btn-block btn-outline-primary" href="{{url_for('online_uplata', id=current_user.id)}}">Uplata na online račun</a>
+{% endif %}
+{% endblock %}

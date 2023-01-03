@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %} 
+Konverzija valuta
+{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top:20px; margin-left:20px">
+  <div class="col-8">
+    <h2>Izaberite valutu za konverziju</h2>
+    <br />
+    <table class="table table-hover table-dark">
+      <thead>
+        <tr>
+          <th scope="col">Valuta</th>
+          <th scope="col">Odnos</th>
+          <th scope="col">Konvertuj</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Your rows inside the table HERE: -->
+        {% for valuta2 in valute.keys() %}
+        <tr>
+          <td>{{valuta2}}</td>
+          <td>{{valute[valuta2]}}</td>
+          <td><a class="btn btn-sm btn-secondary" href="{{url_for('konvertovanje', id=current_user.id, valuta=valuta, valuta2=valuta2)}}">Konvertuj</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endblock  %}

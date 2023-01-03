@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, DateField
+from wtforms import StringField, PasswordField, SubmitField, DateField, FloatField
 from wtforms.validators import Length, EqualTo, Email, DataRequired, ValidationError
 from projekat.modeli import Korisnik, Kartica
 
@@ -38,6 +38,14 @@ class IzmenaForm(FlaskForm):
   
 class VerifikacijaForm(FlaskForm):
   broj_kartice = StringField(label='Broj kartice:', validators=[Length(min=16, max=16), DataRequired()])
-  datum_isteka_kartice = StringField(label='Datum isteka kartice: ', validators=[DataRequired()])
+  datum_isteka_kartice = StringField(label='Datum isteka kartice(format MM/YYYY): ', validators=[DataRequired()])
   sigurnosni_kod = StringField(label='Sigurnosni kod: ', validators=[Length(min=3, max=3), DataRequired()])
   submit = SubmitField(label='Verifikuj nalog')
+  
+class OnlineUplataForm(FlaskForm):
+  iznos = FloatField(label='Iznos: ', validators=[DataRequired()])
+  submit = SubmitField(label='Uplati na račun')
+  
+class KonvertovanjeForm(FlaskForm):
+  iznos = FloatField(label='Iznos: ', validators=[DataRequired()])
+  submit = SubmitField(label='Konvertuj')
