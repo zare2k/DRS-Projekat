@@ -1,38 +1,22 @@
 {% extends 'base.html' %}
 
 {% block title %} 
-Izmena profila
+Transakcija na karticu
 {% endblock %}
 
 {% block content %}
 <body class="text-center">
   <div class="container">
-    <form action="/izmena/{{korisnik_izmena.id}}" method="POST" class="form-register">
-      {{form.hidden_tag()}}
-      <h1 class="h3 mb-3 font-weight-normal">Izmena profila</h1>
-      {{form.ime.label()}}
-      <input class="form-control" name="ime" value="{{korisnik_izmena.ime}}">
+    <form method="POST" class="form-register">
+      {{ forma.hidden_tag() }}
+      <h1 class="h3 mb-3 font-weight-normal">Transakcija na karticu</h1>
+      {{forma.broj_kartice_primaoca.label()}}
+      {{forma.broj_kartice_primaoca(class="form-control", placeholder="Broj kartice")}}
 
-      {{form.prezime.label()}}
-      <input class="form-control" name="prezime" value="{{korisnik_izmena.prezime}}">
+      {{forma.suma.label()}}
+      {{forma.suma(class="form-control", placeholder="Suma")}}
 
-      {{form.adresa.label()}}
-      <input class="form-control" name="adresa" value="{{korisnik_izmena.adresa}}">
-
-      {{form.grad.label()}}
-      <input class="form-control" name="grad" value="{{korisnik_izmena.grad}}">
-
-      {{form.drzava.label()}}
-      <input class="form-control" name="drzava" value="{{korisnik_izmena.drzava}}">
-
-      {{form.broj_telefona.label()}}
-      <input class="form-control" name="broj_telefona" value="{{korisnik_izmena.broj_telefona}}">
-
-      {{form.email.label()}}
-      <input class="form-control" name="email" value="{{korisnik_izmena.email}}" readonly>
-
-      <br />
-      {{form.submit(class="btn btn-lg btn-block btn-primary")}}
+      {{forma.submit(class="btn btn-lg btn-block btn-primary")}}
       <br/>
     </form>
   </div>
