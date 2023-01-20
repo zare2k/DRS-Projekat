@@ -1,9 +1,14 @@
+from datetime import datetime
 from projekat import app, db
-from projekat.forme import RegisterForm, LoginForm, IzmenaForm, VerifikacijaForm, OnlineUplataForm, KonvertovanjeForm
-from projekat.modeli import Korisnik, Kartica, RealTimeCurrencyConverter, Stanja
+from projekat.forme import RegisterForm, LoginForm, IzmenaForm, VerifikacijaForm, OnlineUplataForm, KonvertovanjeForm, TransakcijeKarticaForm, TransakcijeRacunForm
+from projekat.modeli import Korisnik, Kartica, RealTimeCurrencyConverter, Stanja, Transakcije
+from projekat.transakcije import proces_transakcije_racun, proces_transakcije_kartica
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.sql import text, select
+from multiprocessing import Process, Lock
+
+lock = Lock()
 
 @app.route('/')
 @app.route('/pocetna')
@@ -184,3 +189,67 @@ def online_uplata(id):
         else:
             flash('Unesite pravilan iznos.', category='danger')
     return render_template('online_uplata.html', forma=forma, korisnik=korisnik)
+
+@app.route('/transakcije', methods=["GET", "POST"])
+@login_required
+def transakcije():
+    korisnik = current_user
+
+    return render_template('transakcije.html', korisnik=korisnik)
+
+@app.route('/transakcije_kartica', methods=["GET", "POST"])
+@login_required
+def transakcije_kartica():
+    korisnik = current_user
+    kartica_uplatioca = Kartica.query.filter_by(ime_korisnika=korisnik.id).first()
+    forma = TransakcijeKarticaForm()
+    if request.method == "POST":
+        if forma.validate_on_submit():
+            if forma.suma.data < 0:
+                flash(f'Unesite ispravan iznos.', category='danger')
+                return redirect(url_for('transakcije_kartica'))
+            if forma.broj_kartice_primaoca.data == kartica_uplatioca.broj_kartice:
+                flash(f'Ne možete samome sebi uplatiti novac.', category='danger')
+                return redirect(url_for('transakcije_kartica')) 
+            kartica_primaoca = Kartica.query.filter_by(broj_kartice=forma.broj_kartice_primaoca.data).first()
+            if kartica_primaoca == None:
+                flash(f'Ne postoji kartica sa unesenim brojem kartice', category='danger')
+                return redirect(url_for('transakcije_kartica'))                 
+
+            vreme = datetime.now()
+            vreme_string = vreme.strftime("%H:%M:%S")
+            process = Process(target=proces_transakcije_kartica, args=[lock, korisnik.id, forma.suma.data, forma.broj_kartice_primaoca.data, vreme_string])
+            process.start()
+            return redirect(url_for('transakcije'))
+        else:
+            flash('Unesite pravilan iznos i broj kartice.', category='danger')
+
+    return render_template('transakcije_kartica.html', forma=forma)
+
+@app.route('/transakcije_racun', methods=["GET", "POST"])
+@login_required
+def transakcije_racun():
+    korisnik = current_user
+    forma = TransakcijeRacunForm()
+    if request.method == "POST":
+        if forma.validate_on_submit():
+            if forma.suma.data < 0:
+                flash(f'Unesite ispravan iznos.', category='danger')
+                return redirect(url_for('transakcije_racun'))
+            if forma.email_primaoca.data == korisnik.email:
+                flash(f'Ne možete samome sebi uplatiti novac.', category='danger')
+                return redirect(url_for('transakcije_racun'))
+            primalac = Korisnik.query.filter_by(email=forma.email_primaoca.data).first()
+            if primalac == None:
+                flash(f'Ne postoji korisnik sa tom e-mail adresom.', category='danger')
+                return redirect(url_for('transakcije_racun'))                   
+
+            vreme = datetime.now()
+            vreme_string = vreme.strftime("%H:%M:%S")
+            process = Process(target=proces_transakcije_racun, args=[lock, korisnik.id, forma.suma.data, forma.email_primaoca.data, vreme_string])
+            process.start()
+            return redirect(url_for('transakcije'))
+        else:
+            flash('Unesite pravilan iznos i e-mail primaoca.', category='danger')
+
+    return render_template('transakcije_racun.html', forma=forma)
