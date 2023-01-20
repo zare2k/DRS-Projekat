@@ -12,9 +12,11 @@ def proces_transakcije_racun(lock, korisnik_id, suma, email_primaoca, vreme_stri
 
     transakcija = Transakcije(suma=suma,
                               email_primaoca=email_primaoca,
+                              broj_kartice_primaoca="/",
                               vreme_transakcije=vreme_string,
                               vrsta_uplate="Uplata na racun",
-                              stanje_transakcije="U OBRADI")
+                              stanje_transakcije="U OBRADI",
+                              posiljalac_id=korisnik_id)
 
     app.app_context().push()
     db.session.add(transakcija)
@@ -44,9 +46,11 @@ def proces_transakcije_kartica(lock, korisnik_id, suma, broj_kartice_primaoca, v
 
     transakcija = Transakcije(suma=suma,
                               broj_kartice_primaoca=broj_kartice_primaoca,
+                              email_primaoca = "/",
                               vreme_transakcije=vreme_string,
                               vrsta_uplate="Uplata na karticu",
-                              stanje_transakcije="U OBRADI")
+                              stanje_transakcije="U OBRADI",
+                              posiljalac_id=korisnik_id)
 
     app.app_context().push()
     db.session.add(transakcija)
