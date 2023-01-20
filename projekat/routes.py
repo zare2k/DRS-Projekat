@@ -194,8 +194,9 @@ def online_uplata(id):
 @login_required
 def transakcije():
     korisnik = current_user
+    transakcije = Transakcije.query.filter_by(posiljalac_id=korisnik.id).all()
 
-    return render_template('transakcije.html', korisnik=korisnik)
+    return render_template('transakcije.html', title='Transakcije', korisnik=korisnik, transakcije=transakcije)
 
 @app.route('/transakcije_kartica', methods=["GET", "POST"])
 @login_required
