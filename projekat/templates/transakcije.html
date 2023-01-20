@@ -1,0 +1,39 @@
+{% extends 'data_tables.html' %}
+
+
+{% block content %}
+<body class="text-center">
+  <div class="row" style="margin-top:20px; margin-left:20px">
+    <div class="col-3" style="margin-top:20px; margin-left:20px">
+      <h2>Izaberite način transakcije</h2>
+      <a class="btn btn-sm btn-block btn-outline-primary" href="{{url_for('transakcije_racun')}}">Transakcija na račun</a>
+      <a class="btn btn-sm btn-block btn-outline-primary" href="{{url_for('transakcije_kartica')}}">Transakcija na karticu</a>
+    </div>
+    <div class="col-8">
+      <h2>Istorija transakcija</h2>
+      <table id="data" class="table table-hover table-dark" style="color:white">
+        <thead>
+          <tr>
+            <th>Suma</th>
+            <th>Vreme transakcije</th>
+            <th>Vrsta uplate</th>
+            <th>Email primaoca</th>
+            <th>Broj kartice primaoca</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for transakcija in transakcije %}
+            <tr>
+              <td>{{ transakcija.suma }}</td>
+              <td>{{ transakcija.vreme_transakcije }}</td>
+              <td>{{ transakcija.vrsta_uplate }}</td>
+              <td>{{ transakcija.email_primaoca }}</td>
+              <td>{{ transakcija.broj_kartice_primaoca }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+{% endblock %}
