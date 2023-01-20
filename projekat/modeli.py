@@ -79,3 +79,4 @@ class Transakcije(db.Model, UserMixin):
   vrsta_uplate = db.Column(db.String(length=30), nullable=False)
   email_primaoca = db.Column(db.String(length=30))
   broj_kartice_primaoca = db.Column(db.String(length=30))
+  posiljalac_id = db.Column(db.Integer(), nullable=False)
