@@ -45,7 +45,7 @@ class Kartica(db.Model, UserMixin):
   #online_budzet = db.Column(db.Float(), nullable=False, default=0)
   #valuta = db.Column(db.String(length=3), nullable=False, default='RSD')
   ime_korisnika = db.Column(db.Integer(), db.ForeignKey('korisnik.id'))
-
+  
   def uplata_online(self, iznos):
     return self.budzet >= iznos and iznos > 0
     
@@ -71,3 +71,11 @@ class RealTimeCurrencyConverter():
     def get_valute(self):
       return self.currencies
     
+class Transakcije(db.Model, UserMixin):
+  id = db.Column(db.Integer(), primary_key=True)
+  suma = db.Column(db.Integer(), nullable=False)
+  stanje_transakcije = db.Column(db.String(length=30), nullable=True)
+  vreme_transakcije = db.Column(db.String(length=30), nullable=False)
+  vrsta_uplate = db.Column(db.String(length=30), nullable=False)
+  email_primaoca = db.Column(db.String(length=30))
+  broj_kartice_primaoca = db.Column(db.String(length=30))
