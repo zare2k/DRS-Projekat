@@ -1,0 +1,7 @@
+version: "3"
+services:
+  python-projekatdrs:
+    build: .
+    image: python-projekatdrs
+    ports:
+      - 5000:5000
