@@ -49,3 +49,13 @@ class OnlineUplataForm(FlaskForm):
 class KonvertovanjeForm(FlaskForm):
   iznos = FloatField(label='Iznos: ', validators=[DataRequired()])
   submit = SubmitField(label='Konvertuj')
+
+class TransakcijeKarticaForm(FlaskForm):
+  suma = FloatField(label='Iznos: ', validators=[DataRequired()])
+  broj_kartice_primaoca = StringField(label='Broj kartice:', validators=[Length(min=16, max=16), DataRequired()])
+  submit = SubmitField(label='Uplati')
+  
+class TransakcijeRacunForm(FlaskForm):
+  suma = FloatField(label='Iznos: ', validators=[DataRequired()])
+  email_primaoca = StringField(label='Email:', validators=[Email(), DataRequired()])
+  submit = SubmitField(label='Uplati')
